@@ -6,10 +6,6 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
-  getHello(): string {
-    return 'Hello World!';
-  }
-
   async create(createArticleDto: CreateArticleDto){
     const article = createArticleDto.article;
     const createdArticle = await this.prisma.article.create({
@@ -39,5 +35,22 @@ export class ArticleService {
       },
     };
   }
+
+  async findAll() {
+  const articles = await this.prisma.article.findMany({
+    include: {
+      tags: true,
+    },
+  });
+
+  return {
+    articles: articles.map(article => ({
+      title: article.title,
+      description: article.description,
+      body: article.body,
+      tagList: article.tags.map(t => t.name),
+    })),
+  };
+}
 
 }

@@ -6,13 +6,13 @@ import { type CreateArticleDto } from './dto/create-article.dto';
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
-  @Get()
-  getHello(): string {
-    return this.articleService.getHello();
+  @Post()
+  createArticle(@Body() createArticleDto: CreateArticleDto){
+    return this.articleService.create(createArticleDto);
   }
 
-  @Post()
-  create(@Body() createArticleDto: CreateArticleDto){
-    return this.articleService.create(createArticleDto);
+  @Get()
+  getAllArticles(){
+    return this.articleService.findAll();
   }
 }

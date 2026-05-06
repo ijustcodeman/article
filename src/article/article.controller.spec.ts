@@ -13,10 +13,4 @@ describe('AppController', () => {
 
     articleController = app.get<ArticleController>(ArticleController);
   });
-
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(articleController.getHello()).toBe('Hello World!');
-    });
-  });
 });
