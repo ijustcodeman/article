@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { type CreateArticleDto } from './dto/create-article.dto';
 
@@ -14,5 +14,10 @@ export class ArticleController {
   @Get()
   getAllArticles(){
     return this.articleService.findAll();
+  }
+
+  @Get(':slug')
+  findBySlug(@Param('slug') slug: string){
+    return this.articleService.findArticleBySlug(slug);
   }
 }
