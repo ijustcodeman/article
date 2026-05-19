@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateArticleDto } from './dto/create-article.dto';
+import { type CreateArticleDto } from './dto/create-article.dto';
+import { type ArticleResponse, type ArticlesResponse } from './dto/article-response.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
 
@@ -7,7 +8,7 @@ import slugify from 'slugify';
 export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createArticleDto: CreateArticleDto){
+  async create(createArticleDto: CreateArticleDto): Promise<ArticleResponse>{
     const article = createArticleDto.article;
 
 
@@ -48,7 +49,7 @@ export class ArticleService {
     };
   }
 
-  async findAll() {
+  async findAll(): Promise<ArticlesResponse> {
   const articles = await this.prisma.article.findMany({
     include: {
       tags: true,
@@ -61,6 +62,7 @@ export class ArticleService {
 
   return {
     articles: articles.map(article => ({
+      slug: article.slug,
       title: article.title,
       description: article.description,
       body: article.body,
@@ -69,20 +71,7 @@ export class ArticleService {
   };
   }
 
-  /* We wanna find an article by a slug.
-    The slug has to be created with the 
-    articles title. This means that we need
-    to generate a slug while creating an article,
-    save it in the local database and then use it
-    to get an article with the corresponding slug.
-
-    TODO: 
-    - add slug to article schema (done)
-    - modify the create article method (done)
-    - modify findArticleBySlug() method (done)
-    - integrate into controller (done)
-  */
-  async findArticleBySlug(slug: string){
+  async findArticleBySlug(slug: string): Promise<ArticleResponse>{
     const article = await this.prisma.article.findUnique({
       where: {
         slug,
@@ -107,7 +96,5 @@ export class ArticleService {
       },
     };
   }
-
-
 
 }

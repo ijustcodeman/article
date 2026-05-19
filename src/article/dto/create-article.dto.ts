@@ -1,4 +1,4 @@
-// id is not needed, since prisma generates it automatically
+// Payload used when creating an article
 export type ArticlePayload = {
     title: string;
     description: string;
@@ -6,6 +6,7 @@ export type ArticlePayload = {
     tagList: string[];
 };
 
+// Request body shape for POST /articles
 export type CreateArticleDto = {
     article: ArticlePayload;
 };

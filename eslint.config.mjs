@@ -7,7 +7,14 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   js.configs.recommended,
   tseslint.configs.strict,
-  tseslint.configs.stylistic
+  tseslint.configs.stylistic,
+
+  // no warnings for types
+  {
+  rules: {
+    '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
+  },
+  }
 );
 
 /*

@@ -1,6 +1,6 @@
 # TODO's for today
 
-1. Type safety across the project
+1. Type safety across the project (kind of done with eslint)
 2. Authentication and Authorization
 
 ---
