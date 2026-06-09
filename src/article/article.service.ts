@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { type CreateArticleDto } from './dto/create-article.dto';
-import { type ArticleResponse, type ArticlesResponse } from './dto/article-response.dto';
+import {
+  type ArticleResponse,
+  type ArticlesResponse,
+} from './dto/article-response.dto';
 import { toArticlePayload } from './mappers/article.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
@@ -10,8 +13,10 @@ export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
 
-  // creates an article
-  async create(createArticleDto: CreateArticleDto): Promise<ArticleResponse>{
+  async create(
+    createArticleDto: CreateArticleDto,
+    authorId: number,
+  ): Promise<ArticleResponse> {
     const article = createArticleDto.article;
 
     const slug = slugify(article.title, {
@@ -26,6 +31,11 @@ export class ArticleService {
         title: article.title,
         description: article.description,
         body: article.body,
+        author: {
+          connect: {
+            id: authorId,
+          },
+        },
 
         tags: {
           connectOrCreate: article.tagList?.map((tag: string) => ({
@@ -37,6 +47,7 @@ export class ArticleService {
 
       include: {
         tags: true,
+        author: true,
       },
     });
 
@@ -47,23 +58,20 @@ export class ArticleService {
 
   // returns all articles
   async findAll(): Promise<ArticlesResponse> {
-  const articles = await this.prisma.article.findMany({
-    include: {
-      tags: true,
-    },
-  });
+    const articles = await this.prisma.article.findMany({
+      include: {
+        tags: true,
+        author: true,
+      },
+    });
 
-  if (!articles){
-    throw new NotFoundException('No articles found');
+    return {
+      articles: articles.map(toArticlePayload),
+      articlesCount: articles.length,
+    };
   }
 
-  return {
-    articles: articles.map(toArticlePayload),
-  };
-  }
-
-  // finds an article by a slug
-  async findArticleBySlug(slug: string): Promise<ArticleResponse>{
+  async findArticleBySlug(slug: string): Promise<ArticleResponse> {
     const article = await this.prisma.article.findUnique({
       where: {
         slug,
@@ -71,10 +79,11 @@ export class ArticleService {
 
       include: {
         tags: true,
+        author: true,
       },
     });
 
-    if (!article){
+    if (!article) {
       throw new NotFoundException('Article not found');
     }
 
