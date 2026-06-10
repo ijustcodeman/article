@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
 import { type CreateArticleDto } from './dto/create-article.dto';
 import {
   type ArticleResponse,
@@ -25,35 +30,48 @@ export class ArticleService {
       trim: true,
     });
 
-    const createdArticle = await this.prisma.article.create({
-      data: {
-        slug,
-        title: article.title,
-        description: article.description,
-        body: article.body,
-        author: {
-          connect: {
-            id: authorId,
+    try {
+      const createdArticle = await this.prisma.article.create({
+        data: {
+          slug,
+          title: article.title,
+          description: article.description,
+          body: article.body,
+          author: {
+            connect: {
+              id: authorId,
+            },
+          },
+
+          tags: {
+            connectOrCreate: article.tagList?.map((tag: string) => ({
+              where: { name: tag },
+              create: { name: tag },
+            })),
           },
         },
 
-        tags: {
-          connectOrCreate: article.tagList?.map((tag: string) => ({
-            where: { name: tag },
-            create: { name: tag },
-          })),
+        include: {
+          tags: true,
+          author: true,
         },
-      },
+      });
 
-      include: {
-        tags: true,
-        author: true,
-      },
-    });
+      return {
+        article: toArticlePayload(createdArticle),
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new UnprocessableEntityException(
+          'An article with this title already exists',
+        );
+      }
 
-    return {
-      article: toArticlePayload(createdArticle),
-    };
+      throw error;
+    }
   }
 
   // returns all articles
