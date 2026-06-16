@@ -9,6 +9,7 @@ type JwtPayload = {
   sub: number;
 };
 
+/** Returns the configured JWT secret or throws when it is missing. */
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
 
@@ -19,6 +20,7 @@ function getJwtSecret(): string {
   return secret;
 }
 
+/** Extracts a JWT from the API specification's Token authorization header. */
 function extractToken(request: Request): string | null {
   const authorization = request.headers.authorization;
 
@@ -39,6 +41,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  /** Resolves the JWT subject to a user that Passport attaches to the request. */
   async validate(payload: JwtPayload): Promise<UserModel> {
     const user = await this.userService.findById(payload.sub);
 

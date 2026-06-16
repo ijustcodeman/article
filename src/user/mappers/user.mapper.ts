@@ -1,8 +1,6 @@
 import { type UserModel } from '../../../generated/prisma/models/User';
 import { type UserResponsePayload } from '../dto/user-response.dto';
 
-// takes UserModel but only keeps public user fields and
-// merges this together with the token
 type UserWithToken = Pick<
   UserModel,
   'username' | 'email' | 'bio' | 'image'
@@ -10,6 +8,7 @@ type UserWithToken = Pick<
   token: string;
 };
 
+/** Converts a user and JWT into the public authentication response payload. */
 export function toUserResponsePayload(user: UserWithToken): UserResponsePayload {
   return {
     username: user.username,

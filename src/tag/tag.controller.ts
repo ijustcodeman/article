@@ -6,6 +6,7 @@ import { TagService } from './tag.service';
 export class TagController {
   constructor(private readonly tagService: TagService) {}
 
+  /** Returns all tags available in the application. */
   @Get()
   findAll(): Promise<TagsResponse> {
     return this.tagService.findAll();

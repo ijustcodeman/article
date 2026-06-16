@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class TagService {
   constructor(private prisma: PrismaService) {}
 
+  /** Returns all tag names in alphabetical order. */
   async findAll(): Promise<TagsResponse> {
     const tags = await this.prisma.tag.findMany({
       orderBy: {

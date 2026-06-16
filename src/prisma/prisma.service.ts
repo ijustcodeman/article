@@ -15,10 +15,12 @@ export class PrismaService
     });
   }
 
+  /** Opens the Prisma database connection when the NestJS module starts. */
   async onModuleInit() {
     await this.$connect();
   }
 
+  /** Closes the Prisma database connection when the NestJS module stops. */
   async onModuleDestroy() {
     await this.$disconnect();
   }

@@ -14,6 +14,7 @@ import { toArticlePayload } from './mappers/article.mapper';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
 
+/** Builds the Prisma relations needed to return article response data for an optional current user. */
 function articleInclude(currentUserId?: number): Prisma.ArticleInclude {
   return {
     tags: true,
@@ -40,7 +41,7 @@ function articleInclude(currentUserId?: number): Prisma.ArticleInclude {
 export class ArticleService {
   constructor(private prisma: PrismaService) {}
 
-
+  /** Creates an article with its author and tags and returns the API response representation. */
   async create(
     createArticleDto: CreateArticleDto,
     authorId: number,
@@ -94,6 +95,7 @@ export class ArticleService {
     }
   }
 
+  /** Returns a filtered and paginated list of articles ordered from newest to oldest. */
   async findAll(
     filters: ListArticlesQuery,
     currentUserId?: number,
@@ -141,6 +143,7 @@ export class ArticleService {
     };
   }
 
+  /** Finds one article by its slug and throws an error when it does not exist. */
   async findArticleBySlug(
     slug: string,
     currentUserId?: number,
@@ -162,14 +165,17 @@ export class ArticleService {
     };
   }
 
+  /** Adds an article to the authenticated user's favorites. */
   async favorite(slug: string, userId: number): Promise<ArticleResponse> {
     return this.updateFavorite(slug, userId, 'connect');
   }
 
+  /** Removes an article from the authenticated user's favorites. */
   async unfavorite(slug: string, userId: number): Promise<ArticleResponse> {
     return this.updateFavorite(slug, userId, 'disconnect');
   }
 
+  /** Updates the favorite relation and returns the article with its current favorite state. */
   private async updateFavorite(
     slug: string,
     userId: number,

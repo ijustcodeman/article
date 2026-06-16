@@ -33,6 +33,7 @@ type OptionalAuthenticatedRequest = Request & {
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
+  /** Validates and creates an article for the authenticated user. */
   @Post()
   @UseGuards(JwtAuthGuard)
   createArticle(
@@ -44,6 +45,7 @@ export class ArticleController {
     return this.articleService.create(createArticleDto, request.user.id);
   }
 
+  /** Returns articles matching the validated query filters and optional current user. */
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   getAllArticles(
@@ -55,6 +57,7 @@ export class ArticleController {
     return this.articleService.findAll(filters, request.user?.id);
   }
 
+  /** Returns the article identified by the given slug. */
   @Get(':slug')
   @UseGuards(OptionalJwtAuthGuard)
   findBySlug(
@@ -64,6 +67,7 @@ export class ArticleController {
     return this.articleService.findArticleBySlug(slug, request.user?.id);
   }
 
+  /** Favorites the selected article for the authenticated user. */
   @Post(':slug/favorite')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
@@ -74,6 +78,7 @@ export class ArticleController {
     return this.articleService.favorite(slug, request.user.id);
   }
 
+  /** Unfavorites the selected article for the authenticated user. */
   @Delete(':slug/favorite')
   @UseGuards(JwtAuthGuard)
   unfavoriteArticle(

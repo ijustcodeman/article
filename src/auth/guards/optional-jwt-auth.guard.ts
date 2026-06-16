@@ -4,6 +4,7 @@ import { type Request } from 'express';
 
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
+  /** Allows anonymous requests while authenticating requests that include an authorization header. */
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
 

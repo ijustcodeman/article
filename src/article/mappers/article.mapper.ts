@@ -19,6 +19,7 @@ type ArticleWithTags = {
   favoritedBy?: { id: number }[];
 };
 
+/** Converts a Prisma article result into the public article response payload. */
 export function toArticlePayload(
   article: ArticleWithTags,
 ): ArticleResponsePayload {

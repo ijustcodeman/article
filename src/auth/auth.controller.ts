@@ -9,6 +9,7 @@ import { parseWithSchema } from '../common/zod-validation';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /** Validates a registration request and creates a new user account. */
   @Post()
   register(@Body() body: unknown): Promise<AuthResponse> {
     const registerUserDto = parseWithSchema(RegisterUserDtoSchema, body);
@@ -16,6 +17,7 @@ export class AuthController {
     return this.authService.register(registerUserDto);
   }
 
+  /** Validates login credentials and returns the authenticated user. */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() body: unknown): Promise<AuthResponse> {

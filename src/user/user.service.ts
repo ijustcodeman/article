@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  /** Creates and returns a user database record. */
   async createUser(user: {
     username: string;
     email: string;
@@ -17,6 +18,7 @@ export class UserService {
     });
   }
 
+  /** Finds a user by email or returns null when none exists. */
   async findByEmail(email: string): Promise<UserModel | null> {
     return this.prisma.user.findUnique({
       where: {
@@ -25,8 +27,7 @@ export class UserService {
     });
   }
 
-  // we could merge this together with findByEmail but for testing and
-  // debugging purposes we will leave it like that
+  /** Finds a user by username or returns null when none exists. */
   async findByUsername(username: string): Promise<UserModel | null> {
     return this.prisma.user.findUnique({
       where: {
@@ -35,6 +36,7 @@ export class UserService {
     });
   }
 
+  /** Finds a user by database identifier or returns null when none exists. */
   async findById(id: number): Promise<UserModel | null> {
     return this.prisma.user.findUnique({
       where: {
@@ -43,6 +45,7 @@ export class UserService {
     });
   }
 
+  /** Updates the supplied fields of a user and returns the resulting record. */
   async updateUser(
     id: number,
     user: UpdateUserPayload,

@@ -23,6 +23,7 @@ type AuthenticatedRequest = Request & {
 export class CurrentUserController {
   constructor(private readonly authService: AuthService) {}
 
+  /** Returns the currently authenticated user's data. */
   @Get()
   getCurrentUser(
     @Req() request: AuthenticatedRequest,
@@ -30,6 +31,7 @@ export class CurrentUserController {
     return this.authService.getCurrentUser(request.user.id);
   }
 
+  /** Validates and applies updates to the currently authenticated user. */
   @Put()
   updateCurrentUser(
     @Req() request: AuthenticatedRequest,

@@ -19,6 +19,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /** Registers a unique user, hashes the password, and returns the user with a JWT. */
   async register(registerUserDto: RegisterUserDto): Promise<AuthResponse> {
     const existingEmail = await this.userService.findByEmail(
       registerUserDto.user.email,
@@ -54,6 +55,7 @@ export class AuthService {
     };
   }
 
+  /** Authenticates a user's credentials and returns the user with a new JWT. */
   async login(loginUserDto: LoginUserDto): Promise<AuthResponse> {
     const user = await this.userService.findByEmail(loginUserDto.user.email);
 
@@ -80,6 +82,7 @@ export class AuthService {
     };
   }
 
+  /** Returns the authenticated user's current data with a refreshed JWT. */
   async getCurrentUser(userId: number): Promise<AuthResponse> {
     const user = await this.userService.findById(userId);
 
@@ -95,6 +98,7 @@ export class AuthService {
     };
   }
 
+  /** Validates uniqueness and updates the authenticated user's supplied fields. */
   async updateCurrentUser(
     userId: number,
     updateUserDto: UpdateUserDto,
@@ -130,6 +134,7 @@ export class AuthService {
     };
   }
 
+  /** Signs a JWT containing the user's database identifier. */
   private async signToken(userId: number): Promise<string> {
     return this.jwtService.signAsync({
       sub: userId,
