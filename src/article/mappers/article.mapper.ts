@@ -12,6 +12,7 @@ type ArticleWithTags = {
     username: string;
     bio: string;
     image: string;
+    followers?: { id: number }[];
   };
   _count?: {
     favoritedBy: number;
@@ -37,7 +38,7 @@ export function toArticlePayload(
       username: article.author.username,
       bio: article.author.bio,
       image: article.author.image,
-      following: false,
+      following: (article.author.followers?.length ?? 0) > 0,
     },
   };
 }

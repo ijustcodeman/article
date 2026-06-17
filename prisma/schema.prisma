@@ -41,4 +41,6 @@ model User {
   image     String  @default("")
   articles  Article[]
   favorites Article[] @relation("ArticleFavorites")
+  following User[]    @relation("UserFollows")
+  followers User[]    @relation("UserFollows")
 }

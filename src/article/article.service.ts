@@ -20,10 +20,23 @@ import slugify from 'slugify';
 function articleInclude(currentUserId?: number): Prisma.ArticleInclude {
   return {
     tags: true,
-    author: true,
     _count: {
       select: {
         favoritedBy: true,
+      },
+    },
+    author: {
+      include: {
+        ...(currentUserId && {
+          followers: {
+            where: {
+              id: currentUserId,
+            },
+            select: {
+              id: true,
+            },
+          },
+        }),
       },
     },
     ...(currentUserId && {
