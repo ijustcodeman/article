@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -6,6 +7,7 @@ import {
 import { Prisma } from '../../generated/prisma/client';
 import { type CreateArticleDto } from './dto/create-article.dto';
 import { type ListArticlesQuery } from './dto/list-articles-query.dto';
+import { type UpdateArticleDto } from './dto/update-article.dto';
 import {
   type ArticleResponse,
   type ArticlesResponse,
@@ -165,6 +167,61 @@ export class ArticleService {
     };
   }
 
+  /** Updates an article owned by the authenticated user and returns the updated response representation. */
+  async updateArticle(
+    slug: string,
+    updateArticleDto: UpdateArticleDto,
+    userId: number,
+  ): Promise<ArticleResponse> {
+    const existingArticle = await this.findArticleForOwnerCheck(slug, userId);
+    const article = updateArticleDto.article;
+
+    try {
+      const updatedArticle = await this.prisma.article.update({
+        where: {
+          id: existingArticle.id,
+        },
+        data: {
+          ...article,
+          ...(article.title && {
+            slug: slugify(article.title, {
+              lower: true,
+              strict: true,
+              trim: true,
+            }),
+          }),
+        },
+        include: articleInclude(userId),
+      });
+
+      return {
+        article: toArticlePayload(updatedArticle),
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new UnprocessableEntityException(
+          'An article with this title already exists',
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /** Deletes an article owned by the authenticated user. */
+  async deleteArticle(slug: string, userId: number): Promise<void> {
+    const existingArticle = await this.findArticleForOwnerCheck(slug, userId);
+
+    await this.prisma.article.delete({
+      where: {
+        id: existingArticle.id,
+      },
+    });
+  }
+
   /** Adds an article to the authenticated user's favorites. */
   async favorite(slug: string, userId: number): Promise<ArticleResponse> {
     return this.updateFavorite(slug, userId, 'connect');
@@ -209,5 +266,31 @@ export class ArticleService {
 
       throw error;
     }
+  }
+
+  /** Finds an article and verifies that the authenticated user is its author. */
+  private async findArticleForOwnerCheck(
+    slug: string,
+    userId: number,
+  ): Promise<{ id: number; authorId: number }> {
+    const article = await this.prisma.article.findUnique({
+      where: {
+        slug,
+      },
+      select: {
+        id: true,
+        authorId: true,
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (article.authorId !== userId) {
+      throw new ForbiddenException('Only the author can modify this article');
+    }
+
+    return article;
   }
 }

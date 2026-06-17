@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -17,6 +18,7 @@ import { ArticleService } from './article.service';
 import { type ArticleResponse } from './dto/article-response.dto';
 import { CreateArticleDtoSchema } from './dto/create-article.dto';
 import { ListArticlesQuerySchema } from './dto/list-articles-query.dto';
+import { UpdateArticleDtoSchema } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { parseWithSchema } from '../common/zod-validation';
@@ -65,6 +67,34 @@ export class ArticleController {
     @Param('slug') slug: string,
   ) {
     return this.articleService.findArticleBySlug(slug, request.user?.id);
+  }
+
+  /** Validates and updates an article owned by the authenticated user. */
+  @Put(':slug')
+  @UseGuards(JwtAuthGuard)
+  updateArticle(
+    @Req() request: AuthenticatedRequest,
+    @Param('slug') slug: string,
+    @Body() body: unknown,
+  ): Promise<ArticleResponse> {
+    const updateArticleDto = parseWithSchema(UpdateArticleDtoSchema, body);
+
+    return this.articleService.updateArticle(
+      slug,
+      updateArticleDto,
+      request.user.id,
+    );
+  }
+
+  /** Deletes an article owned by the authenticated user. */
+  @Delete(':slug')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  deleteArticle(
+    @Req() request: AuthenticatedRequest,
+    @Param('slug') slug: string,
+  ): Promise<void> {
+    return this.articleService.deleteArticle(slug, request.user.id);
   }
 
   /** Favorites the selected article for the authenticated user. */
