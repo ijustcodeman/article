@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { type CreateArticleDto } from './dto/create-article.dto';
-import { type ListArticlesQuery } from './dto/list-articles-query.dto';
+import {
+  type ArticlePaginationQuery,
+  type ListArticlesQuery,
+} from './dto/list-articles-query.dto';
 import { type UpdateArticleDto } from './dto/update-article.dto';
 import {
   type ArticleResponse,
@@ -149,6 +152,42 @@ export class ArticleService {
           createdAt: 'desc',
         },
         include: articleInclude(currentUserId),
+      }),
+    ]);
+
+    return {
+      articles: articles.map(toArticlePayload),
+      articlesCount,
+    };
+  }
+
+  /** Returns articles from authors followed by the authenticated user ordered from newest to oldest. */
+  async findFeed(
+    pagination: ArticlePaginationQuery,
+    userId: number,
+  ): Promise<ArticlesResponse> {
+    const where: Prisma.ArticleWhereInput = {
+      author: {
+        followers: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+    };
+
+    const [articlesCount, articles] = await this.prisma.$transaction([
+      this.prisma.article.count({
+        where,
+      }),
+      this.prisma.article.findMany({
+        where,
+        skip: pagination.offset,
+        take: pagination.limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: articleInclude(userId),
       }),
     ]);
 

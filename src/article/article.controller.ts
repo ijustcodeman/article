@@ -17,7 +17,10 @@ import { type UserModel } from '../../generated/prisma/models/User';
 import { ArticleService } from './article.service';
 import { type ArticleResponse } from './dto/article-response.dto';
 import { CreateArticleDtoSchema } from './dto/create-article.dto';
-import { ListArticlesQuerySchema } from './dto/list-articles-query.dto';
+import {
+  ArticlePaginationQuerySchema,
+  ListArticlesQuerySchema,
+} from './dto/list-articles-query.dto';
 import { UpdateArticleDtoSchema } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -57,6 +60,18 @@ export class ArticleController {
     const filters = parseWithSchema(ListArticlesQuerySchema, query);
 
     return this.articleService.findAll(filters, request.user?.id);
+  }
+
+  /** Returns articles from authors followed by the authenticated user. */
+  @Get('feed')
+  @UseGuards(JwtAuthGuard)
+  getFeed(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: unknown,
+  ) {
+    const pagination = parseWithSchema(ArticlePaginationQuerySchema, query);
+
+    return this.articleService.findFeed(pagination, request.user.id);
   }
 
   /** Returns the article identified by the given slug. */

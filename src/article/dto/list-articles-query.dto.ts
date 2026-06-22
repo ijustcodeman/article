@@ -13,4 +13,12 @@ export const ListArticlesQuerySchema = z.object({
   offset: IntegerQuerySchema.pipe(z.number().int().min(0)).default(0),
 });
 
+export const ArticlePaginationQuerySchema = ListArticlesQuerySchema.pick({
+  limit: true,
+  offset: true,
+});
+
 export type ListArticlesQuery = z.infer<typeof ListArticlesQuerySchema>;
+export type ArticlePaginationQuery = z.infer<
+  typeof ArticlePaginationQuerySchema
+>;
