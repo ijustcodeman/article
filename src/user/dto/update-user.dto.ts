@@ -3,7 +3,7 @@ import * as z from 'zod';
 export const UpdateUserPayloadSchema = z
   .object({
     email: z.email().optional(),
-    password: z.string().min(1).optional(),
+    password: z.string().min(8).optional(),
     username: z.string().min(1).optional(),
     bio: z.string().optional(),
     image: z.string().optional(),

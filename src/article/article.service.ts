@@ -1,6 +1,4 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { type CreateArticleDto } from './dto/create-article.dto';
 import {
@@ -16,6 +14,21 @@ import { toArticlePayload } from './mappers/article.mapper';
 import { specError } from '../common/spec-error';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
+
+/** Creates a URL-safe slug from a title and rejects titles without slug content. */
+function createSlugFromTitle(title: string): string {
+  const slug = slugify(title, {
+    lower: true,
+    strict: true,
+    trim: true,
+  });
+
+  if (!slug) {
+    throw specError('Article title must contain letters or numbers');
+  }
+
+  return slug;
+}
 
 /** Builds the Prisma relations needed to return article response data for an optional current user. */
 function articleInclude(currentUserId?: number): Prisma.ArticleInclude {
@@ -63,12 +76,7 @@ export class ArticleService {
     authorId: number,
   ): Promise<ArticleResponse> {
     const article = createArticleDto.article;
-
-    const slug = slugify(article.title, {
-      lower: true,
-      strict: true,
-      trim: true,
-    });
+    const slug = createSlugFromTitle(article.title);
 
     try {
       const createdArticle = await this.prisma.article.create({
@@ -102,7 +110,7 @@ export class ArticleService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw specError('An article with this title already exists');
+        throw specError('An article with this generated slug already exists');
       }
 
       throw error;
@@ -232,11 +240,7 @@ export class ArticleService {
         data: {
           ...article,
           ...(article.title && {
-            slug: slugify(article.title, {
-              lower: true,
-              strict: true,
-              trim: true,
-            }),
+            slug: createSlugFromTitle(article.title),
           }),
         },
         include: articleInclude(userId),
@@ -250,7 +254,7 @@ export class ArticleService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw specError('An article with this title already exists');
+        throw specError('An article with this generated slug already exists');
       }
 
       throw error;
