@@ -1,11 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { type ProfileResponse } from './dto/profile-response.dto';
 import { toProfilePayload } from './mappers/profile.mapper';
+import { specError } from '../common/spec-error';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Builds the Prisma relation needed to return whether the current user follows a profile. */
@@ -41,7 +38,7 @@ export class ProfileService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profile not found');
+      throw specError('Profile not found');
     }
 
     return {
@@ -78,11 +75,11 @@ export class ProfileService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Profile not found');
+      throw specError('Profile not found');
     }
 
     if (profile.id === currentUserId) {
-      throw new UnprocessableEntityException('You cannot follow yourself');
+      throw specError('You cannot follow yourself');
     }
 
     await this.prisma.user.update({

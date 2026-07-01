@@ -1,8 +1,5 @@
 import {
-  ForbiddenException,
   Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { type CreateArticleDto } from './dto/create-article.dto';
@@ -16,6 +13,7 @@ import {
   type ArticlesResponse,
 } from './dto/article-response.dto';
 import { toArticlePayload } from './mappers/article.mapper';
+import { specError } from '../common/spec-error';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
 
@@ -104,9 +102,7 @@ export class ArticleService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new UnprocessableEntityException(
-          'An article with this title already exists',
-        );
+        throw specError('An article with this title already exists');
       }
 
       throw error;
@@ -211,7 +207,7 @@ export class ArticleService {
     });
 
     if (!article) {
-      throw new NotFoundException('Article not found');
+      throw specError('Article not found');
     }
 
     return {
@@ -254,9 +250,7 @@ export class ArticleService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new UnprocessableEntityException(
-          'An article with this title already exists',
-        );
+        throw specError('An article with this title already exists');
       }
 
       throw error;
@@ -313,7 +307,7 @@ export class ArticleService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
-        throw new NotFoundException('Article not found');
+        throw specError('Article not found');
       }
 
       throw error;
@@ -336,11 +330,11 @@ export class ArticleService {
     });
 
     if (!article) {
-      throw new NotFoundException('Article not found');
+      throw specError('Article not found');
     }
 
     if (article.authorId !== userId) {
-      throw new ForbiddenException('Only the author can modify this article');
+      throw specError('Only the author can modify this article');
     }
 
     return article;

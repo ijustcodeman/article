@@ -1,14 +1,12 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '../../generated/prisma/client';
 import { type AuthResponse } from './dto/auth-response.dto';
 import { type LoginUserDto } from './dto/login-user.dto';
 import { type RegisterUserDto } from './dto/register-user.dto';
 import { type UpdateUserDto } from '../user/dto/update-user.dto';
+import { specError } from '../common/spec-error';
 import { UserService } from '../user/user.service';
 import { toUserResponsePayload } from '../user/mappers/user.mapper';
 
@@ -26,7 +24,7 @@ export class AuthService {
     );
 
     if (existingEmail) {
-      throw new ConflictException('Email already exists');
+      throw specError('Email already exists');
     }
 
     const existingUsername = await this.userService.findByUsername(
@@ -34,12 +32,12 @@ export class AuthService {
     );
 
     if (existingUsername) {
-      throw new ConflictException('Username already exists');
+      throw specError('Username already exists');
     }
 
     const hashedPassword = await bcrypt.hash(registerUserDto.user.password, 10);
 
-    const user = await this.userService.createUser({
+    const user = await this.createUserWithSpecErrors({
       username: registerUserDto.user.username,
       email: registerUserDto.user.email,
       password: hashedPassword,
@@ -109,7 +107,7 @@ export class AuthService {
       const existingEmail = await this.userService.findByEmail(email);
 
       if (existingEmail && existingEmail.id !== userId) {
-        throw new ConflictException('Email already exists');
+        throw specError('Email already exists');
       }
     }
 
@@ -117,11 +115,11 @@ export class AuthService {
       const existingUsername = await this.userService.findByUsername(username);
 
       if (existingUsername && existingUsername.id !== userId) {
-        throw new ConflictException('Username already exists');
+        throw specError('Username already exists');
       }
     }
 
-    const user = await this.userService.updateUser(userId, {
+    const user = await this.updateUserWithSpecErrors(userId, {
       ...updateUserDto.user,
       ...(password ? { password: await bcrypt.hash(password, 10) } : {}),
     });
@@ -139,5 +137,42 @@ export class AuthService {
     return this.jwtService.signAsync({
       sub: userId,
     });
+  }
+
+  /** Creates a user and converts database uniqueness errors into the error response. */
+  private async createUserWithSpecErrors(user: {
+    username: string;
+    email: string;
+    password: string;
+  }) {
+    try {
+      return await this.userService.createUser(user);
+    } catch (error) {
+      this.throwSpecErrorForUniqueUserFields(error);
+    }
+  }
+
+  /** Updates a user and converts database uniqueness errors into the error response. */
+  private async updateUserWithSpecErrors(
+    userId: number,
+    updateUserDto: UpdateUserDto['user'],
+  ) {
+    try {
+      return await this.userService.updateUser(userId, updateUserDto);
+    } catch (error) {
+      this.throwSpecErrorForUniqueUserFields(error);
+    }
+  }
+
+  /** Converts Prisma unique constraint errors for users into the error response. */
+  private throwSpecErrorForUniqueUserFields(error: unknown): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw specError('Email or username already exists');
+    }
+
+    throw error;
   }
 }
